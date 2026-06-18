@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>原基科技 - 后台管理</title>
+<link href="vendor/bootstrap.min.css" rel="stylesheet">
+<link href="vendor/bootstrap-icons.css" rel="stylesheet">
+<link href="vendor/quill.snow.css" rel="stylesheet">
+<style>
+:root {
+  --sidebar-w: 220px;
+  --sidebar-min: 180px;
+  --topbar-h: 50px;
+}
+body { font-size: 14px; background: #f5f6fa; }
+#app { min-height: 100vh; }
+
+/* Quill overrides */
+.ql-editor { min-height: 250px; font-size: 14px; }
+.ql-editor p { margin-bottom: 8px; }
+/* Quill 列表：用橙色 ◆ 替代默认黑点，匹配前端样式 */
+.ql-editor li[data-list=bullet] > .ql-ui:before {
+  content: '◆';
+  color: #F56C2D;
+}
+/* 规格表预览样式 */
+.spec-preview { border:1px solid #dee2e6;border-radius:4px;padding:12px;background:#fff;max-height:400px;overflow:auto;font-size:13px; }
+.spec-preview table { width:100%;border-collapse:collapse;color:#333; }
+.spec-preview td { padding:6px 10px;border:1px solid #dee2e6;vertical-align:middle;text-align:center;font-size:13px;background:#fff;color:#333; }
+.spec-preview td:first-child { background:#f0f0f0;font-weight:600; }
+.ql-toolbar { border-radius: 4px 4px 0 0; }
+.ql-container { border-radius: 0 0 4px 4px; }
+.news-editor-wrap { border: 1px solid #dee2e6; border-radius: 4px; }
+.news-editor-wrap .ql-toolbar { border: none; border-bottom: 1px solid #dee2e6; }
+.news-editor-wrap .ql-container { border: none; }
+
+/* Login */
+.login-page {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+}
+.login-card {
+  width: 420px; padding: 40px; background: #fff; border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.login-card h3 { color: #1a73e8; font-weight: 700; }
+
+/* Layout */
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-min);
+  background: #1e293b; color: #fff;
+  overflow-y: auto; overflow-x: hidden; z-index: 100;
+}
+.sidebar .logo { padding: 16px 20px; font-size: 18px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar .logo small { font-size: 11px; opacity: 0.6; display: block; }
+.sidebar .nav-item { display: block; padding: 12px 20px; color: #94a3b8; text-decoration: none; cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s; }
+.sidebar .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.sidebar .nav-item.active { color: #fff; background: rgba(255,255,255,0.1); border-left-color: #3b82f6; }
+.sidebar .nav-item i { margin-right: 8px; }
+.sidebar .user-info { padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: #64748b; margin-top: auto; }
+
+.topbar {
+  position: fixed; top: 0; left: var(--sidebar-w); right: 0;
+  height: var(--topbar-h); background: #fff; border-bottom: 1px solid #e2e8f0;
+  display: flex; align-items: center; padding: 0 20px;
+  z-index: 99; font-size: 13px;
+}
+.topbar .breadcrumb { margin: 0; }
+.main-content {
+  margin-left: var(--sidebar-w); margin-top: var(--topbar-h);
+  padding: 24px;
+}
+
+/* Cards & Tables */
+.card { border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.table > :not(caption) > * > * { padding: 10px 12px; vertical-align: middle; }
+.table th { font-weight: 600; font-size: 12px; text-transform: uppercase; color: #64748b; background: #f8fafc; }
+.btn { font-size: 13px; }
+.btn-sm { font-size: 12px; }
+.badge { font-weight: 500; }
+
+/* Stats */
+.stat-card {
+  background: #fff; border-radius: 8px; padding: 20px;
+  border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: box-shadow 0.15s;
+}
+.stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; }
+.stat-value { font-size: 24px; font-weight: 700; }
+.stat-label { font-size: 12px; color: #64748b; }
+
+/* Modal */
+.modal-lg-custom { max-width: 900px; }
+.modal-body textarea { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+.nav-tabs .nav-link { font-size: 13px; padding: 8px 16px; }
+
+/* Toast */
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+
+/* Status dots */
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.status-dot.ok { background: #22c55e; }
+.status-dot.warn { background: #f59e0b; }
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(255,255,255,0.7);
+  display: flex; align-items: center; justify-content: center; z-index: 9998;
+}
+
+/* 窄屏：侧边栏只显示图标 */
+@media (max-width: 860px) {
+  .sidebar { width: 50px; }
+  .sidebar .logo { font-size: 0; padding: 10px 4px; }
+  .sidebar .logo small { display: none; }
+  .sidebar .nav-item { font-size: 0; padding: 10px 6px; text-align: center; border-left: none; }
+  .sidebar .nav-item i { margin-right: 0; font-size: 18px; }
+  .sidebar .user-info { display: none; }
+  .topbar { left: 50px; }
+  .main-content { margin-left: 50px; padding: 12px; }
+  :root { --sidebar-w: 50px; }
+}
+</style>
+</head>
+<body>
+
+<div id="diag-banner" style="position:fixed;top:0;left:var(--sidebar-w);right:0;background:#fff3cd;color:#664d03;padding:10px 16px;font-size:13px;z-index:99999;text-align:center;font-family:monospace;border-bottom:2px solid #ffc107;">
+  🔍 后台管理系统诊断中... <span id="diag-status">正在加载资源</span>
+</div>
+<div id="app">
+  <!-- Login Screen -->
+  <div v-if="!token" class="login-page">
+    <div class="login-card">
+      <h3 class="mb-1">原基科技</h3>
+      <p class="text-muted mb-4">后台管理系统</p>
+      <div class="mb-3">
+        <label class="form-label">GitHub Personal Access Token</label>
+        <input v-model="inputToken" type="password" class="form-control" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+               @keyup.enter="login">
+      </div>
+      <button class="btn btn-primary w-100" @click="login" :disabled="loggingIn">
+        <span v-if="loggingIn" class="spinner-border spinner-border-sm me-1"></span>
+        {{ loggingIn ? '验证中...' : '登 录' }}
+      </button>
+      <p class="text-danger mt-2 small" v-if="loginError">{{ loginError }}</p>
+      <p class="text-muted mt-3 small mb-0">
+        <i class="bi bi-info-circle"></i> Token 需要 <code>repo</code> 权限，在
+        <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Tokens</a> 生成
+      </p>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div v-else>
+    <!-- Sidebar -->
+    <div class="sidebar d-flex flex-column">
+      <div class="logo">原基科技 <small>内容管理系统</small></div>
+      <nav class="flex-grow-1 pt-2">
+        <a class="nav-item" :class="{ active: tab === 'dashboard' }" @click="switchTab('dashboard')">
+          <i class="bi bi-speedometer2"></i> 仪表盘
+        </a>
+        <a class="nav-item" :class="{ active: tab === 'products' }" @click="switchTab('products')">
+          <i class="bi bi-box-seam"></i> 产品管理
+        </a>
+        <a class="nav-item" :class="{ active: tab === 'news' }" @click="switchTab('news')">
+          <i class="bi bi-newspaper"></i> 新闻管理
+        </a>
+        <a class="nav-item" :class="{ active: tab === 'cases' }" @click="switchTab('cases')">
+          <i class="bi bi-building"></i> 方案管理
+        </a>
+        <a class="nav-item" :class="{ active: tab === 'settings' }" @click="switchTab('settings')">
+          <i class="bi bi-gear"></i> 网站设置
+        </a>
+      </nav>
+      <div class="user-info">
+        <i class="bi bi-github"></i> easybase1704/easybase<br>
+        <a href="#" @click.prevent="logout" class="text-muted">退出登录</a>
+      </div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <nav class="breadcrumb">
+        <span class="breadcrumb-item">后台管理</span>
+        <span class="breadcrumb-item active">{{ tabLabel }}</span>
+      </nav>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <span v-if="saving" class="text-warning small"><span class="spinner-border spinner-border-sm me-1"></span>保存中</span>
+        <span v-else class="text-success small status-dot ok"></span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+      <!-- ==================== DASHBOARD ==================== -->
+      <div v-if="tab === 'dashboard'">
+        <div class="row g-3 mb-4">
+          <div class="col-md-3" v-for="s in stats" :key="s.key">
+            <div class="stat-card" @click="switchTab(s.key)">
+              <div class="stat-icon" :style="{ background: s.color }"><i :class="s.icon"></i></div>
+              <div>
+                <div class="stat-value">{{ s.count }}</div>
+                <div class="stat-label">{{ s.label }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-title mb-3">快速操作</h6>
+            <button class="btn btn-outline-primary btn-sm me-2" @click="switchTab('products'); addProduct()"><i class="bi bi-plus-lg"></i> 新增产品</button>
+            <button class="btn btn-outline-primary btn-sm me-2" @click="switchTab('news'); addNews()"><i class="bi bi-plus-lg"></i> 新增新闻</button>
+            <button class="btn btn-outline-primary btn-sm me-2" @click="switchTab('cases'); addCase()"><i class="bi bi-plus-lg"></i> 新增方案</button>
+            <button class="btn btn-outline-secondary btn-sm" @click="refreshAll"><i class="bi bi-arrow-clockwise"></i> 刷新全部数据</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== PRODUCTS ==================== -->
+      <div v-if="tab === 'products'">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+              <h5 class="mb-0">产品列表</h5>
+              <select class="form-select form-select-sm w-auto" v-model="prodFilter" @change="filteredProducts">
+                <option value="">全部产品</option>
+                <optgroup v-for="cat in productData.categories" :key="cat.id" :label="cat.name">
+                  <option v-for="sub in cat.sub" :key="sub.id" :value="sub.id">
+                    {{ cat.name }} → {{ sub.name }}
+                  </option>
+                </optgroup>
+              </select>
+              <input class="form-control form-control-sm w-auto" placeholder="搜索型号..." v-model="prodSearch">
+              <span class="text-muted small">{{ filteredProducts.length }} / {{ productData.products.length }} 个产品</span>
+              <button class="btn btn-primary btn-sm ms-auto" @click="addProduct"><i class="bi bi-plus-lg"></i> 新增</button>
+            </div>
+            <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+              <table class="table table-hover table-sm">
+                <thead style="position: sticky; top: 0;">
+                  <tr>
+                    <th>型号</th>
+                    <th>分类</th>
+                    <th>简述</th>
+                    <th>热门</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="p in filteredProducts" :key="p.oid">
+                    <td><strong>{{ p.name }}</strong></td>
+                    <td><span class="badge bg-secondary">{{ getCategoryLabel(p.classId) }}</span></td>
+                    <td class="text-muted small">{{ p.duibi?.substring(0, 40) }}{{ p.duibi?.length > 40 ? '...' : '' }}</td>
+                    <td><span class="badge" :class="p.isHot ? 'bg-danger' : 'bg-light text-muted'">{{ p.isHot ? '🔥推荐' : '-' }}</span></td>
+                    <td>
+                      <button class="btn btn-outline-secondary btn-sm me-1" @click="editProduct(p)"><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-outline-danger btn-sm" @click="deleteProduct(p)"><i class="bi bi-trash"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== NEWS ==================== -->
+      <div v-if="tab === 'news'">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+              <h5 class="mb-0">新闻列表</h5>
+              <select class="form-select form-select-sm w-auto" v-model="newsFilter">
+                <option value="">全部新闻</option>
+                <option v-for="cat in newsData.categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+              </select>
+              <span class="text-muted small">{{ filteredNews.length }} 篇文章</span>
+              <button class="btn btn-primary btn-sm ms-auto" @click="addNews"><i class="bi bi-plus-lg"></i> 新增</button>
+            </div>
+            <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+              <table class="table table-hover table-sm">
+                <thead style="position: sticky; top: 0;">
+                  <tr><th>标题</th><th>分类</th><th>日期</th><th>操作</th></tr>
+                </thead>
+                <tbody>
+                  <tr v-for="a in filteredNews" :key="a.oid">
+                    <td><strong>{{ a.title }}</strong></td>
+                    <td><span class="badge bg-info">{{ getNewsCatLabel(a.classId) }}</span></td>
+                    <td class="text-muted small">{{ a.date }}</td>
+                    <td>
+                      <button class="btn btn-outline-secondary btn-sm me-1" @click="editNews(a)"><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-outline-danger btn-sm" @click="deleteNews(a)"><i class="bi bi-trash"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== CASES ==================== -->
+      <div v-if="tab === 'cases'">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+              <h5 class="mb-0">方案列表</h5>
+              <span class="text-muted small">{{ casesData.solutions.length }} 个方案</span>
+              <button class="btn btn-primary btn-sm ms-auto" @click="addCase"><i class="bi bi-plus-lg"></i> 新增</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover table-sm">
+                <thead><tr><th>名称</th><th>简述</th><th>关联产品</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr v-for="c in casesData.solutions" :key="c.oid">
+                    <td><strong>{{ c.name }}</strong></td>
+                    <td class="text-muted small">{{ c.duibi?.substring(0, 50) }}{{ c.duibi?.length > 50 ? '...' : '' }}</td>
+                    <td><span v-for="rp in c.relatedProducts" class="badge bg-light text-dark me-1">{{ rp.name }}</span></td>
+                    <td>
+                      <button class="btn btn-outline-secondary btn-sm me-1" @click="editCase(c)"><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-outline-danger btn-sm" @click="deleteCase(c)"><i class="bi bi-trash"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== SETTINGS ==================== -->
+      <div v-if="tab === 'settings'">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title">公司信息</h6>
+                <div class="mb-2"><label class="form-label small mb-1">公司名 (中文)</label><input v-model="siteForm.name" class="form-control form-control-sm"></div>
+                <div class="mb-2"><label class="form-label small mb-1">公司名 (英文)</label><input v-model="siteForm.nameEn" class="form-control form-control-sm"></div>
+                <div class="mb-2"><label class="form-label small mb-1">Slogan (中文)</label><input v-model="siteForm.slogan" class="form-control form-control-sm"></div>
+                <div class="mb-2"><label class="form-label small mb-1">Slogan (英文)</label><input v-model="siteForm.sloganEn" class="form-control form-control-sm"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title">联系方式</h6>
+                <div class="mb-2"><label class="form-label small mb-1">邮箱</label><input v-model="siteForm.contact.email" class="form-control form-control-sm"></div>
+                <div class="mb-2"><label class="form-label small mb-1">招聘邮箱</label><input v-model="siteForm.contact.hrEmail" class="form-control form-control-sm"></div>
+                <div class="mb-2"><label class="form-label small mb-1">服务热线</label><input v-model="siteForm.contact.phoneEdge" class="form-control form-control-sm"></div>
+                <div class="mb-2"><label class="form-label small mb-1">地址</label><textarea v-model="siteForm.contact.address" class="form-control form-control-sm" rows="2"></textarea></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title">销售人员</h6>
+                <div v-for="(sales, idx) in siteForm.contact.sales" :key="idx" class="row g-1 mb-2">
+                  <div class="col-3"><input v-model="sales.title" class="form-control form-control-sm" placeholder="部门"></div>
+                  <div class="col-3"><input v-model="sales.name" class="form-control form-control-sm" placeholder="姓名"></div>
+                  <div class="col-4"><input v-model="sales.phone" class="form-control form-control-sm" placeholder="电话"></div>
+                  <div class="col-2"><button class="btn btn-outline-danger btn-sm w-100" @click="siteForm.contact.sales.splice(idx,1)"><i class="bi bi-x"></i></button></div>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm" @click="siteForm.contact.sales.push({name:'',phone:'',title:''})"><i class="bi bi-plus"></i> 添加</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title">SEO</h6>
+                <label class="form-label small mb-1">关键词 (中文)</label>
+                <input v-model="siteForm.seo.keywords" class="form-control form-control-sm mb-2">
+                <label class="form-label small mb-1">描述 (中文)</label>
+                <textarea v-model="siteForm.seo.description" class="form-control form-control-sm mb-2" rows="2"></textarea>
+                <label class="form-label small mb-1">关键词 (英文)</label>
+                <input v-model="siteForm.seoEn.keywords" class="form-control form-control-sm mb-2">
+                <label class="form-label small mb-1">描述 (英文)</label>
+                <textarea v-model="siteForm.seoEn.description" class="form-control form-control-sm mb-2" rows="2"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary mt-3" @click="saveSettings"><i class="bi bi-check-lg"></i> 保存设置</button>
+      </div>
+
+    </div><!-- /main-content -->
+  </div><!-- /dashboard -->
+
+  <!-- ==================== PRODUCT EDIT MODAL ==================== -->
+  <div class="modal fade" id="productModal" tabindex="-1" ref="productModal">
+    <div class="modal-dialog modal-lg-custom modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editingProduct.oid ? '编辑产品' : '新增产品' }}</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2 mb-3">
+            <div class="col-md-4"><label class="form-label small mb-1">产品型号 *</label><input v-model="editingProduct.name" class="form-control form-control-sm"></div>
+            <div class="col-md-3"><label class="form-label small mb-1">分类 *</label>
+              <select v-model="editingProduct.classId" class="form-select form-select-sm">
+                <optgroup v-for="cat in productData.categories" :label="cat.name">
+                  <option v-for="sub in cat.sub" :value="sub.id">{{ cat.name }} → {{ sub.name }}</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="col-md-2"><label class="form-label small mb-1">热门推荐</label>
+              <select v-model="editingProduct.isHot" class="form-select form-select-sm">
+                <option :value="false">否</option><option :value="true">是 🔥</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Product Images -->
+          <div class="mb-3">
+            <label class="form-label small mb-2 fw-bold">🖼️ 产品图片（4张，命名: slug-01.webp ~ slug-04.webp）</label>
+            <div class="row g-2">
+              <div v-for="i in [1,2,3,4]" :key="i" class="col-3 text-center">
+                <div style="border:1px dashed #ccc;border-radius:6px;padding:6px;min-height:140px;background:#fafafa;">
+                  <img :src="productImgUrl(i) + '?v=' + imgVersion" style="max-width:100%;max-height:90px;"
+                       @error="$event.target.style.display='none'"
+                       @load="$event.target.style.display=''">
+                  <div v-if="!productImgExists(i)" class="text-muted small py-4">图{{ i }} 未上传</div>
+                  <div class="mt-1 small text-muted">{{ productImgSlug() }}-0{{ i }}.webp</div>
+                  <button class="btn btn-outline-secondary btn-sm w-100 mt-1" @click="uploadProductImg(i)">📤 上传</button>
+                  <span class="text-success small" v-if="uploadingImg === i">上传中...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ul class="nav nav-tabs mb-3">
+            <li class="nav-item"><a class="nav-link" :class="{ active: prodTab === 'zh' }" href="#" @click.prevent="switchProdTab('zh')">🇨🇳 中文</a></li>
+            <li class="nav-item"><a class="nav-link" :class="{ active: prodTab === 'en' }" href="#" @click.prevent="switchProdTab('en')">🇺🇸 英文</a></li>
+            <li class="nav-item ms-auto"><a class="nav-link small text-muted" href="#" @click.prevent="toggleProdSrc">{{ prodSrcMode ? '📝 可视化编辑' : '🔧 源码模式' }}</a></li>
+          </ul>
+
+          <!-- Chinese Fields -->
+          <div v-show="prodTab === 'zh' && !prodSrcMode">
+            <div class="mb-2"><label class="form-label small mb-1">简要介绍 (duibi)</label><input v-model="editingProduct.duibi" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">处理器 (cpu)</label><input v-model="editingProduct.cpu" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">内存 (neicun)</label><input v-model="editingProduct.neicun" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">存储 (ssd)</label><input v-model="editingProduct.ssd" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">扩展接口 (jiekou)</label><input v-model="editingProduct.jiekou" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1 fw-bold">亮点 (lifekit)
+              <a href="#" class="small fw-normal ms-2 text-primary" @click.prevent="convertLifekitToBullets('zh')">🔘 转为列表</a>
+            </label>
+              <div class="news-editor-wrap"><div ref="prodLifekitZh"></div></div>
+            </div>
+            <div class="mb-2"><label class="form-label small mb-1 fw-bold">规格表 (yiwaibao)
+              <a href="#" class="small fw-normal ms-2" @click.prevent="yiwaibaoPreviewZh = !yiwaibaoPreviewZh">{{ yiwaibaoPreviewZh ? '✏️ 编辑HTML' : '👁 预览' }}</a>
+              <a href="#" class="small fw-normal ms-2 text-success" @click.prevent="applySpecTemplate('zh')">📋 3列模板</a>
+              <small class="text-muted ms-2">💡 也可直接 Ctrl+V 粘贴表格</small>
+            </label>
+              <div v-if="!yiwaibaoPreviewZh" v-html="editingProduct.yiwaibao" class="spec-preview"></div>
+              <textarea v-else v-model="editingProduct.yiwaibao" class="form-control form-control-sm" rows="18" style="font-size:11px;font-family:monospace;"
+               @paste="handleSpecPaste($event, 'zh')"></textarea>
+            </div>
+          </div>
+          <!-- Chinese Source Code -->
+          <div v-show="prodTab === 'zh' && prodSrcMode">
+            <div class="mb-2"><label class="form-label small mb-1">简要介绍</label><input v-model="editingProduct.duibi" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">处理器</label><input v-model="editingProduct.cpu" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">内存</label><input v-model="editingProduct.neicun" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">存储</label><input v-model="editingProduct.ssd" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">扩展接口</label><input v-model="editingProduct.jiekou" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">亮点 HTML 源码</label><textarea v-model="editingProduct.lifekit" class="form-control form-control-sm" rows="4" style="font-size:11px;"></textarea></div>
+            <div class="mb-2"><label class="form-label small mb-1">规格表 HTML 源码</label><textarea v-model="editingProduct.yiwaibao" class="form-control form-control-sm" rows="8" style="font-size:11px;"></textarea></div>
+          </div>
+
+          <!-- English Fields -->
+          <div v-show="prodTab === 'en' && !prodSrcMode">
+            <div class="mb-2"><label class="form-label small mb-1">简要介绍 (duibiEn)</label><input v-model="editingProduct.duibiEn" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1 fw-bold">亮点 (lifekitEn)
+              <a href="#" class="small fw-normal ms-2 text-primary" @click.prevent="convertLifekitToBullets('en')">🔘 转为列表</a>
+            </label>
+              <div class="news-editor-wrap"><div ref="prodLifekitEn"></div></div>
+            </div>
+            <div class="mb-2"><label class="form-label small mb-1 fw-bold">规格表 (yiwaibaoEn)
+              <a href="#" class="small fw-normal ms-2" @click.prevent="yiwaibaoPreviewEn = !yiwaibaoPreviewEn">{{ yiwaibaoPreviewEn ? '✏️ 编辑HTML' : '👁 预览' }}</a>
+              <a href="#" class="small fw-normal ms-2 text-success" @click.prevent="applySpecTemplate('en')">📋 3列模板</a>
+              <small class="text-muted ms-2">💡 也可直接 Ctrl+V 粘贴表格</small>
+            </label>
+              <div v-if="!yiwaibaoPreviewEn" v-html="editingProduct.yiwaibaoEn" class="spec-preview"></div>
+              <textarea v-else v-model="editingProduct.yiwaibaoEn" class="form-control form-control-sm" rows="18" style="font-size:11px;font-family:monospace;"
+               @paste="handleSpecPaste($event, 'en')"></textarea>
+            </div>
+          </div>
+          <!-- English Source Code -->
+          <div v-show="prodTab === 'en' && prodSrcMode">
+            <div class="mb-2"><label class="form-label small mb-1">简要介绍</label><input v-model="editingProduct.duibiEn" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">亮点 HTML 源码</label><textarea v-model="editingProduct.lifekitEn" class="form-control form-control-sm" rows="4" style="font-size:11px;"></textarea></div>
+            <div class="mb-2"><label class="form-label small mb-1">规格表 HTML 源码</label><textarea v-model="editingProduct.yiwaibaoEn" class="form-control form-control-sm" rows="8" style="font-size:11px;"></textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary btn-sm" @click="saveProduct" :disabled="!editingProduct.name">
+            <i class="bi bi-check-lg"></i> 保存并写入 GitHub
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== NEWS EDIT MODAL ==================== -->
+  <div class="modal fade" id="newsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editingNews.oid ? '编辑新闻' : '新增新闻' }}</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2 mb-3">
+            <div class="col-md-6"><label class="form-label small mb-1">标题 (中文)</label><input v-model="editingNews.title" class="form-control form-control-sm"></div>
+            <div class="col-md-3"><label class="form-label small mb-1">分类</label>
+              <select v-model="editingNews.classId" class="form-select form-select-sm">
+                <option v-for="cat in newsData.categories" :value="cat.id">{{ cat.name }}</option>
+              </select>
+            </div>
+            <div class="col-md-3"><label class="form-label small mb-1">日期</label><input v-model="editingNews.date" type="date" class="form-control form-control-sm"></div>
+          </div>
+          <div class="mb-2"><label class="form-label small mb-1">描述 (中文)</label><input v-model="editingNews.description" class="form-control form-control-sm"></div>
+          <div class="mb-2"><label class="form-label small mb-1">缩略图路径</label><input v-model="editingNews.img" class="form-control form-control-sm"></div>
+          <div class="mb-2"><label class="form-label small mb-1">点击量</label><input v-model="editingNews.hits" type="number" class="form-control form-control-sm" style="width:120px;"></div>
+
+          <ul class="nav nav-tabs mb-3 mt-3">
+            <li class="nav-item"><a class="nav-link" :class="{ active: newsTab === 'zh' }" href="#" @click.prevent="switchNewsTab('zh')">🇨🇳 中文正文</a></li>
+            <li class="nav-item"><a class="nav-link" :class="{ active: newsTab === 'en' }" href="#" @click.prevent="switchNewsTab('en')">🇺🇸 英文正文</a></li>
+            <li class="nav-item ms-auto"><a class="nav-link small text-muted" href="#" @click.prevent="toggleNewsSrc">{{ newsSrcMode ? '📝 可视化编辑' : '🔧 源码模式' }}</a></li>
+          </ul>
+          <!-- Rich Text Editor -->
+          <div v-show="newsTab === 'zh' && !newsSrcMode" class="news-editor-wrap mb-3">
+            <div ref="editorZh"></div>
+          </div>
+          <!-- Source Code Fallback -->
+          <div v-show="newsTab === 'zh' && newsSrcMode">
+            <label class="form-label small mb-1">正文 HTML 源码</label>
+            <textarea v-model="editingNews.body" class="form-control form-control-sm" rows="14" style="font-size:11px;"></textarea>
+          </div>
+          <!-- English -->
+          <div v-show="newsTab === 'en' && !newsSrcMode">
+            <div class="mb-2"><label class="form-label small mb-1">标题 (英文)</label><input v-model="editingNews.titleEn" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">描述 (英文)</label><input v-model="editingNews.descriptionEn" class="form-control form-control-sm"></div>
+            <div class="news-editor-wrap mb-3">
+              <div ref="editorEn"></div>
+            </div>
+          </div>
+          <div v-show="newsTab === 'en' && newsSrcMode">
+            <div class="mb-2"><label class="form-label small mb-1">标题 (英文)</label><input v-model="editingNews.titleEn" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label small mb-1">描述 (英文)</label><input v-model="editingNews.descriptionEn" class="form-control form-control-sm"></div>
+            <label class="form-label small mb-1">正文 HTML 源码</label>
+            <textarea v-model="editingNews.bodyEn" class="form-control form-control-sm" rows="14" style="font-size:11px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary btn-sm" @click="saveNews" :disabled="!editingNews.title">
+            <i class="bi bi-check-lg"></i> 保存并写入 GitHub
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CASE EDIT MODAL ==================== -->
+  <div class="modal fade" id="caseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editingCase.oid ? '编辑方案' : '新增方案' }}</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2 mb-3">
+            <div class="col-md-6"><label class="form-label small mb-1">名称 (中文)</label><input v-model="editingCase.name" class="form-control form-control-sm"></div>
+            <div class="col-md-6"><label class="form-label small mb-1">名称 (英文)</label><input v-model="editingCase.nameEn" class="form-control form-control-sm"></div>
+          </div>
+          <div class="mb-2"><label class="form-label small mb-1">简述 (中文)</label><input v-model="editingCase.duibi" class="form-control form-control-sm"></div>
+          <div class="mb-2"><label class="form-label small mb-1">简述 (英文)</label><input v-model="editingCase.duibiEn" class="form-control form-control-sm"></div>
+          <div class="mb-2"><label class="form-label small mb-1">图标名称</label><input v-model="editingCase.icon" class="form-control form-control-sm"></div>
+          <div class="mb-2"><label class="form-label small mb-1">缩略图路径</label><input v-model="editingCase.thumb" class="form-control form-control-sm"></div>
+          <div class="mb-2"><label class="form-label small mb-1">内容 (body) HTML</label><textarea v-model="editingCase.body" class="form-control form-control-sm" rows="4"></textarea></div>
+          <label class="form-label small mb-1">关联产品</label>
+          <div v-for="(rp, idx) in editingCase.relatedProducts" :key="idx" class="row g-1 mb-1">
+            <div class="col-4"><input v-model="rp.name" class="form-control form-control-sm" placeholder="产品名"></div>
+            <div class="col-4"><input v-model="rp.slug" class="form-control form-control-sm" placeholder="URL slug"></div>
+            <div class="col-2"><button class="btn btn-outline-danger btn-sm" @click="editingCase.relatedProducts.splice(idx,1)"><i class="bi bi-x"></i></button></div>
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" @click="editingCase.relatedProducts.push({name:'',slug:''})"><i class="bi bi-plus"></i> 添加产品</button>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary btn-sm" @click="saveCase" :disabled="!editingCase.name">
+            <i class="bi bi-check-lg"></i> 保存并写入 GitHub
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container">
+    <div v-for="(t, i) in toasts" :key="i" class="toast align-items-center border-0 show" :class="'text-bg-' + t.type">
+      <div class="d-flex"><div class="toast-body">{{ t.msg }}</div>
+        <button class="btn-close btn-close-white me-2 m-auto" @click="toasts.splice(i,1)"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" v-if="loading">
+    <div class="text-center"><div class="spinner-border text-primary mb-2"></div><br>{{ loadingMsg }}</div>
+  </div>
+</div>
+
+<!-- 诊断脚本 -->
+<script>
+(function() {
+  var diag = document.getElementById('diag-status');
+  if (diag) diag.textContent = '资源文件已加载，正在初始化 Vue...';
+
+  // 捕获全局错误
+  window._diagErrors = [];
+  window.addEventListener('error', function(e) {
+    var msg = (e.target ? e.target.tagName + ':' + (e.target.src || e.target.href) : '') + ' ' + e.message;
+    window._diagErrors.push(msg);
+    if (window._diagErrors.length <= 3 && document.getElementById('diag-banner')) {
+      var d = document.getElementById('diag-status');
+      if (d) d.textContent = '❌ 资源加载失败: ' + msg;
+      document.getElementById('diag-banner').style.background = '#f8d7da';
+      document.getElementById('diag-banner').style.color = '#842029';
+      document.getElementById('diag-banner').style.borderColor = '#f1aeb5';
+    }
+  }, true);
+
+  window.addEventListener('unhandledrejection', function(e) {
+    window._diagErrors.push('Promise rejection: ' + (e.reason ? e.reason.message || e.reason : ''));
+  });
+})();
+</script>
+<script src="vendor/bootstrap.bundle.min.js"></script>
+<script src="vendor/vue.global.prod.js"></script>
+<script>
+(function() {
+  var diag = document.getElementById('diag-status');
+  if (typeof Vue === 'undefined') {
+    if (diag) diag.textContent = '❌ Vue.js 加载失败！请刷新页面或检查网络';
+  } else {
+    if (diag) diag.textContent = '✅ Vue.js ' + Vue.version + ' 已加载，正在挂载...';
+  }
+})();
+const { createApp } = Vue;
+
+createApp({
+  data() {
+    return {
+      // Auth
+      token: localStorage.getItem('gh_token') || '',
+      authPrefix: localStorage.getItem('gh_auth_prefix') || 'Bearer',
+      inputToken: '',
+      loggingIn: false,
+      loginError: '',
+
+      // UI State
+      tab: 'dashboard',
+      loading: false,
+      loadingMsg: '加载中...',
+      saving: false,
+      toasts: [],
+
+      // Data caches
+      productData: { categories: [], products: [] },
+      newsData: { categories: [], articles: [] },
+      casesData: { solutions: [] },
+      siteData: {},
+      // File SHAs for updating
+      _shas: {},
+
+      // Product filters
+      prodFilter: '',
+      prodSearch: '',
+      newsFilter: '',
+
+      // Editing state
+      editingProduct: this._emptyProduct(),
+      editingNews: this._emptyNews(),
+      editingCase: this._emptyCase(),
+      siteForm: {},
+
+      // Modal tabs
+      prodTab: 'zh',
+      prodSrcMode: false,
+      uploadingImg: 0,
+      imgVersion: 1,
+      yiwaibaoPreviewZh: false,
+      yiwaibaoPreviewEn: false,
+      newsTab: 'zh',
+      newsSrcMode: false,
+
+      // Quill instances
+      _quillZh: null,
+      _quillEn: null,
+      _prodQuills: null,
+
+      // Modal instances
+      _productModal: null,
+      _newsModal: null,
+      _caseModal: null,
+    };
+  },
+
+  computed: {
+    tabLabel() {
+      const m = { dashboard: '仪表盘', products: '产品管理', news: '新闻管理', cases: '方案管理', settings: '网站设置' };
+      return m[this.tab] || '';
+    },
+    stats() {
+      return [
+        { key: 'products', icon: 'bi bi-box-seam', label: '产品', count: this.productData.products.length, color: '#3b82f6' },
+        { key: 'news', icon: 'bi bi-newspaper', label: '新闻', count: this.newsData.articles.length, color: '#06b6d4' },
+        { key: 'cases', icon: 'bi bi-building', label: '方案', count: this.casesData.solutions.length, color: '#8b5cf6' },
+        { key: 'settings', icon: 'bi bi-gear', label: '设置', count: '-', color: '#64748b' },
+      ];
+    },
+    filteredProducts() {
+      let list = this.productData.products;
+      if (this.prodFilter) list = list.filter(p => p.classId === this.prodFilter);
+      if (this.prodSearch) {
+        const q = this.prodSearch.toLowerCase();
+        list = list.filter(p => p.name.toLowerCase().includes(q) || (p.duibi || '').includes(q));
+      }
+      return list;
+    },
+    filteredNews() {
+      let list = this.newsData.articles;
+      if (this.newsFilter) list = list.filter(a => a.classId === this.newsFilter);
+      return list;
+    },
+  },
+
+  async mounted() {
+    // 隐藏诊断横幅
+    const banner = document.getElementById('diag-banner');
+    if (banner) banner.style.display = 'none';
+
+    if (this.token) {
+      const result = await this._verifyToken();
+      if (!result.ok) { this.token = ''; localStorage.removeItem('gh_token'); this.loginError = result.error; return; }
+      await this.refreshAll();
+    }
+  },
+
+  methods: {
+    // ==================== HELPERS ====================
+    _emptyProduct() {
+      return { oid: null, name: '', classId: 9, duibi: '', cpu: '', neicun: '', ssd: '', jiekou: '', isHot: false, yiwaibao: '', lifekit: '', duibiEn: '', yiwaibaoEn: '', lifekitEn: '', slug: '' };
+    },
+    _emptyNews() {
+      return { oid: null, title: '', classId: 1, description: '', date: new Date().toISOString().slice(0,10), hits: 0, img: '', isHot: false, body: '', titleEn: '', descriptionEn: '', bodyEn: '' };
+    },
+    _emptyCase() {
+      return { oid: null, name: '', nameEn: '', duibi: '', duibiEn: '', icon: '', body: '', thumb: '', relatedProducts: [] };
+    },
+
+    _fmtHtml(html) {
+      if (!html) return '';
+      return html
+        .replace(/></g, '>\n<')
+        .replace(/<\/tr>/gi, '</tr>\n')
+        .replace(/<\/table>/gi, '</table>\n');
+    },
+    _fmtHtml(html) {
+      if (!html) return '';
+      return html
+        .replace(/></g, '>\n<')
+        .replace(/<\/tr>/gi, '</tr>\n')
+        .replace(/<\/table>/gi, '</table>\n');
+    },
+    applySpecTemplate(lang) {
+      const field = lang === 'en' ? 'yiwaibaoEn' : 'yiwaibao';
+      if (this.editingProduct[field] && this.editingProduct[field].trim()) {
+        if (!confirm('当前规格表已有内容，套用模板会覆盖，确定？')) return;
+      }
+      const zh = `<table><tbody>
+<tr><td colspan="2">型号</td><td>此处填型号</td></tr>
+<tr><td>系统</td><td>CPU</td><td>填处理器</td></tr>
+<tr><td><br></td><td>芯片组</td><td>填芯片组</td></tr>
+<tr><td colspan="2">内存</td><td>填内存规格</td></tr>
+<tr><td>显示</td><td>HDMI</td><td>填显示接口</td></tr>
+<tr><td><br></td><td>VGA</td><td>填显示接口</td></tr>
+<tr><td>存储</td><td>M.2</td><td>填存储</td></tr>
+<tr><td>I/O</td><td>以太网</td><td>填网口</td></tr>
+<tr><td><br></td><td>USB</td><td>填USB</td></tr>
+<tr><td><br></td><td>音频</td><td>填音频</td></tr>
+<tr><td>电源</td><td>类型</td><td>填电源</td></tr>
+<tr><td><br></td><td>电压</td><td>填电压</td></tr>
+<tr><td>环境</td><td>工作温度</td><td>填温度</td></tr>
+<tr><td><br></td><td>安装方式</td><td>填安装方式</td></tr>
+<tr><td>机械</td><td>尺寸</td><td>填尺寸</td></tr>
+<tr><td colspan="2">认证</td><td>填认证</td></tr>
+</tbody></table>`;
+      const en = `<table><tbody>
+<tr><td colspan="2">Model</td><td>Fill model</td></tr>
+<tr><td>System</td><td>CPU</td><td>Fill CPU</td></tr>
+<tr><td><br></td><td>Chipset</td><td>Fill chipset</td></tr>
+<tr><td colspan="2">Memory</td><td>Fill memory</td></tr>
+<tr><td>Display</td><td>HDMI</td><td>Fill display</td></tr>
+<tr><td><br></td><td>VGA</td><td>Fill display</td></tr>
+<tr><td>Storage</td><td>M.2</td><td>Fill storage</td></tr>
+<tr><td>I/O</td><td>Ethernet</td><td>Fill Ethernet</td></tr>
+<tr><td><br></td><td>USB</td><td>Fill USB</td></tr>
+<tr><td><br></td><td>Audio</td><td>Fill audio</td></tr>
+<tr><td>Power</td><td>Type</td><td>Fill power</td></tr>
+<tr><td><br></td><td>Voltage</td><td>Fill voltage</td></tr>
+<tr><td>Environment</td><td>Operating Temp</td><td>Fill temp</td></tr>
+<tr><td><br></td><td>Mounting</td><td>Fill mounting</td></tr>
+<tr><td>Mechanical</td><td>Dimensions</td><td>Fill dimensions</td></tr>
+<tr><td colspan="2">Certification</td><td>Fill cert</td></tr>
+</tbody></table>`;
+      this.editingProduct[field] = this._fmtHtml(lang === 'en' ? en : zh);
+      if (lang === 'en') this.yiwaibaoPreviewEn = true;
+      else this.yiwaibaoPreviewZh = true;
+      this.toast('模板已填入，修改单元格内容后点预览查看', 'success');
+    },
+    handleSpecPaste(e, lang) {
+      const html = (e.clipboardData || window.clipboardData).getData('text/html');
+      if (!html) return;
+      const tableMatch = html.match(/<table[\s\S]*?<\/table>/i);
+      if (!tableMatch) return;
+      e.preventDefault();
+      // 清洗 Word/Excel 样式，只保留结构和文本
+      let clean = tableMatch[0]
+        .replace(/<table[^>]*>/gi, '<table>')
+        .replace(/<tbody[^>]*>/gi, '<tbody>')
+        .replace(/<colgroup[\s\S]*?<\/colgroup>/gi, '')
+        .replace(/<(tr|td|th)([^>]*)>/gi, (m, tag, attrs) => {
+          const c = attrs.match(/colspan\s*=\s*["']?(\d+)/i);
+          const r = attrs.match(/rowspan\s*=\s*["']?(\d+)/i);
+          let a = ''; if (c) a += ' colspan="' + c[1] + '"'; if (r) a += ' rowspan="' + r[1] + '"';
+          return '<' + tag + a + '>';
+        })
+        .replace(/<\/?(p|span|b|i|u|strong|em|font|div|br)[^>]*>/gi, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .replace(/>\s+</g, '><')
+        .replace(/<td([^>]*)>\s*<\/td>/gi, '<td$1></td>');
+      const field = lang === 'en' ? 'yiwaibaoEn' : 'yiwaibao';
+      this.editingProduct[field] = this._fmtHtml(clean);
+      this.toast('✅ 表格已粘贴并清洗样式', 'success');
+    },
+    _b64Encode(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      bytes.forEach(b => binary += String.fromCharCode(b));
+      return btoa(binary);
+    },
+    _b64Decode(b64) {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    },
+
+    async _githubAPI(path, method = 'GET', body = null) {
+      const opts = {
+        method,
+        headers: { 'Authorization': `${this.authPrefix} ${this.token}`, 'Accept': 'application/vnd.github.v3+json' },
+      };
+      if (body) opts.body = JSON.stringify(body);
+      let resp;
+      try {
+        resp = await fetch(`https://api.github.com/repos/easybase1704/easybase/contents/${path}`, opts);
+      } catch (e) {
+        throw new Error(`网络请求失败: ${e.message}（检查是否能访问 api.github.com）`);
+      }
+      if (!resp.ok) {
+        let errMsg = `HTTP ${resp.status}`;
+        try {
+          const body = await resp.json();
+          errMsg += `: ${body.message}`;
+          if (resp.status === 401) errMsg += '（Token无效或已过期）';
+          if (resp.status === 403) errMsg += '（无权限，Token需要repo scope；或API限流）';
+          if (resp.status === 404) errMsg += '（仓库或文件不存在）';
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
+      return resp.json();
+    },
+
+    async _loadJSON(path) {
+      const file = await this._githubAPI(path);
+      this._shas[path] = file.sha;
+      return JSON.parse(this._b64Decode(file.content));
+    },
+
+    async _saveJSON(path, data, msg) {
+      const content = this._b64Encode(JSON.stringify(data, null, 2));
+      const sha = this._shas[path];
+      const body = { message: msg || `Update ${path} via admin`, content, branch: 'master' };
+      if (sha) body.sha = sha;
+      const result = await this._githubAPI(path, 'PUT', body);
+      this._shas[path] = result.content.sha;
+      return result;
+    },
+
+    async _verifyToken() {
+      // Try both auth formats
+      for (const authPrefix of ['Bearer', 'token']) {
+        try {
+          const resp = await fetch('https://api.github.com/repos/easybase1704/easybase/contents/src/_data/site-base.json', {
+            headers: { 'Authorization': `${authPrefix} ${this.token}`, 'Accept': 'application/vnd.github.v3+json' },
+          });
+          if (resp.ok) {
+            return { ok: true, via: authPrefix };
+          }
+          let errMsg = `HTTP ${resp.status}`;
+          try {
+            const body = await resp.json();
+            errMsg += `: ${body.message}`;
+          } catch (_) {}
+          // Don't break - try the other auth format
+        } catch (e) {
+          // Network error - try next format
+        }
+      }
+      // Both failed — get detailed error from the last attempt
+      try {
+        const resp = await fetch('https://api.github.com/repos/easybase1704/easybase/contents/src/_data/site-base.json', {
+          headers: { 'Authorization': `Bearer ${this.token}`, 'Accept': 'application/vnd.github.v3+json' },
+        });
+        let errMsg = `HTTP ${resp.status}`;
+        try {
+          const body = await resp.json();
+          errMsg += `: ${body.message}`;
+          if (resp.status === 401) errMsg += '（Token无效或已过期）';
+          if (resp.status === 403) errMsg += '（无权限，Token需要repo scope；或API限流）';
+          if (resp.status === 404) errMsg += '（仓库或文件不存在）';
+        } catch (_) {}
+        return { ok: false, error: errMsg };
+      } catch (e) {
+        return { ok: false, error: `网络请求失败: ${e.message}（无法连接 api.github.com）` };
+      }
+    },
+
+    // ==================== AUTH ====================
+    async login() {
+      this.loginError = '';
+      const raw = this.inputToken.trim();
+      if (!raw) { this.loginError = '请输入 Token'; return; }
+      // Quick format check
+      if (!raw.startsWith('ghp_') && !raw.startsWith('github_pat_')) {
+        this.loginError = 'Token 格式异常：应以 ghp_ 或 github_pat_ 开头，当前开头: ' + raw.substring(0, 10) + '...';
+        return;
+      }
+      if (raw.length < 30) {
+        this.loginError = 'Token 长度不足（仅' + raw.length + '字符），请检查是否完整复制';
+        return;
+      }
+      this.loggingIn = true;
+      this.token = raw;
+
+      // Diagnostic: show what we're about to test
+      const diag = [];
+      diag.push('Token 前缀: ' + raw.substring(0, 7) + '***');
+      diag.push('Token 长度: ' + raw.length + ' 字符');
+
+      // Hidden character check
+      const hidden = [];
+      for (let i = 0; i < raw.length; i++) {
+        const code = raw.charCodeAt(i);
+        if (code < 32 || code === 127 || (code > 127 && code < 160) || code === 0x200B || code === 0xFEFF) {
+          hidden.push(`位置${i}: U+${code.toString(16).toUpperCase()}`);
+        }
+      }
+      if (hidden.length > 0) {
+        this.loginError = 'Token 含隐藏/非法字符: ' + hidden.join(', ') + ' —— 请重新复制粘贴';
+        this.loggingIn = false;
+        return;
+      }
+      diag.push('目标仓库: easybase1704/easybase');
+
+      // Test 1: /user with Bearer
+      try {
+        const r1 = await fetch('https://api.github.com/user', {
+          headers: { 'Authorization': `Bearer ${this.token}`, 'Accept': 'application/vnd.github.v3+json' },
+        });
+        if (r1.ok) {
+          const u = await r1.json();
+          diag.push('✅ /user Bearer 通过，账号: ' + u.login);
+        } else {
+          diag.push('❌ /user Bearer → HTTP ' + r1.status);
+        }
+      } catch (e) {
+        diag.push('❌ /user Bearer 网络错误: ' + e.message);
+      }
+
+      // Test 2: /user with Basic auth (username:token)
+      try {
+        const basicCred = btoa('x-access-token:' + this.token);
+        const r2 = await fetch('https://api.github.com/user', {
+          headers: { 'Authorization': `Basic ${basicCred}`, 'Accept': 'application/vnd.github.v3+json' },
+        });
+        if (r2.ok) {
+          const u = await r2.json();
+          diag.push('✅ /user Basic 通过，账号: ' + u.login);
+        } else {
+          diag.push('❌ /user Basic → HTTP ' + r2.status);
+        }
+      } catch (e) {
+        diag.push('❌ /user Basic 网络错误: ' + e.message);
+      }
+
+      // Test 3: No auth (verify API reachable)
+      try {
+        const r3 = await fetch('https://api.github.com/rate_limit', {
+          headers: { 'Accept': 'application/vnd.github.v3+json' },
+        });
+        diag.push(r3.ok ? '✅ /rate_limit 无需认证 → OK（API 可达）' : '⚠️ /rate_limit → HTTP ' + r3.status);
+      } catch (e) {
+        diag.push('❌ /rate_limit 网络错误（无法连接 api.github.com）');
+      }
+
+      // Test 2: repo access
+      const result = await this._verifyToken();
+      if (result.ok) {
+        diag.push('✅ 仓库验证通过 (via ' + result.via + ')');
+        this.authPrefix = result.via;
+        localStorage.setItem('gh_token', this.token);
+        localStorage.setItem('gh_auth_prefix', result.via);
+        this.inputToken = '';
+        this.loginError = '';
+        this.toast('登录成功', 'success');
+        await this.refreshAll();
+      } else {
+        diag.push('❌ 仓库验证失败: ' + result.error);
+        this.token = '';
+        this.loginError = result.error;
+      }
+
+      console.log('=== 登录诊断 ===\n' + diag.join('\n'));
+      if (!result.ok) {
+        this.loginError = diag.join(' | ');
+      }
+      this.loggingIn = false;
+    },
+
+    logout() {
+      this.token = '';
+      localStorage.removeItem('gh_token');
+    },
+
+    // ==================== NAVIGATION ====================
+    switchTab(tab) {
+      this.tab = tab;
+      if (tab === 'settings' && this.siteData.name !== undefined) {
+        this.siteForm = JSON.parse(JSON.stringify(this.siteData));
+      }
+    },
+
+    // ==================== DATA ====================
+    async refreshAll() {
+      this.loading = true;
+      this.loadingMsg = '正在从 GitHub 拉取数据...';
+      try {
+        const [prod, news, cases, site] = await Promise.all([
+          this._loadJSON('src/_data/products.json'),
+          this._loadJSON('src/_data/news.json'),
+          this._loadJSON('src/_data/cases.json'),
+          this._loadJSON('src/_data/site-base.json'),
+        ]);
+        this.productData = prod;
+        this.newsData = news;
+        this.casesData = cases;
+        this.siteData = site;
+        this.siteForm = JSON.parse(JSON.stringify(site));
+        this.toast('数据刷新完成', 'success');
+      } catch (e) {
+        this.toast('数据加载失败: ' + e.message, 'danger');
+      }
+      this.loading = false;
+    },
+
+    // ==================== CATEGORY HELPERS ====================
+    getCategoryLabel(classId) {
+      for (const cat of this.productData.categories) {
+        for (const sub of cat.sub) {
+          if (sub.id === classId) return cat.name + ' → ' + sub.name;
+        }
+      }
+      return '未知';
+    },
+    getNewsCatLabel(classId) {
+      const cat = this.newsData.categories.find(c => c.id === classId);
+      return cat ? cat.name : '未知';
+    },
+
+    // ==================== PRODUCTS ====================
+    // ==================== PRODUCT IMAGE HELPERS ====================
+    productImgSlug() {
+      const name = this.editingProduct.name || '';
+      return name.toLowerCase().replace(/[\/\s]+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    },
+    productImgUrl(i) {
+      const slug = this.productImgSlug();
+      if (!slug) return '';
+      return `/images/products/${slug}-0${i}.webp`;
+    },
+    productImgExists(i) {
+      // Can't check without loading — always return true and let onerror handle
+      return !!this.productImgSlug();
+    },
+    async uploadProductImg(i) {
+      this.uploadingImg = i;
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/png,image/jpeg,image/webp';
+      input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) { this.uploadingImg = 0; return; }
+        try {
+          const path = `src/images/products/${this.productImgSlug()}-0${i}.webp`;
+          const buf = await file.arrayBuffer();
+          const bytes = new Uint8Array(buf);
+          let binary = '';
+          bytes.forEach(b => binary += String.fromCharCode(b));
+          const b64 = btoa(binary);
+          await this._githubAPI(path, 'PUT', {
+            message: `Update product image ${this.productImgSlug()}-0${i} via admin`,
+            content: b64, branch: 'master'
+          });
+          this.toast(`图片 ${this.productImgSlug()}-0${i}.webp 已上传`, 'success');
+          // Force refresh preview by adding cache buster
+          this.imgVersion = Date.now();
+        } catch (e) {
+          this.toast('上传失败: ' + e.message, 'danger');
+        }
+        this.uploadingImg = 0;
+      };
+      input.click();
+    },
+
+    addProduct() {
+      const maxOid = this.productData.products.reduce((max, p) => Math.max(max, p.oid || 0), 0);
+      this.editingProduct = this._emptyProduct();
+      this.editingProduct.oid = maxOid + 1;
+      this.prodTab = 'zh';
+      this.prodSrcMode = false;
+      this.yiwaibaoPreviewZh = false;
+      this.yiwaibaoPreviewEn = false;
+      this.imgVersion = Date.now();
+      this._showModal('productModal');
+      setTimeout(() => this._initProdQuill(), 200);
+    },
+    editProduct(p) {
+      console.log('[Quill] editProduct called, name:', p.name, 'lifekit len:', (p.lifekit || '').length);
+      this.editingProduct = JSON.parse(JSON.stringify(p));
+      // 格式化规格表 HTML，便于阅读编辑
+      this.editingProduct.yiwaibao = this._fmtHtml(this.editingProduct.yiwaibao);
+      this.editingProduct.yiwaibaoEn = this._fmtHtml(this.editingProduct.yiwaibaoEn);
+      this.prodTab = 'zh';
+      this.prodSrcMode = false;
+      this.yiwaibaoPreviewZh = false;
+      this.yiwaibaoPreviewEn = false;
+      this.imgVersion = Date.now();
+      this._showModal('productModal');
+      console.log('[Quill] modal shown, scheduling Quill init...');
+      // 使用 setTimeout 代替 $nextTick，确保 Bootstrap modal 动画完成
+      setTimeout(() => {
+        console.log('[Quill] setTimeout fired, calling _initProdQuill...');
+        this._initProdQuill();
+      }, 200);
+    },
+    toggleProdSrc() {
+      if (this.prodSrcMode) {
+        // Switching to visual: init Quill from model
+        this.prodSrcMode = false;
+        setTimeout(() => this._initProdQuill(), 200);
+      } else {
+        // Switching to source: save Quill to model then destroy
+        this._prodQuillToModel();
+        this._destroyProdQuill();
+        this.prodSrcMode = true;
+      }
+    },
+    switchProdTab(tab) {
+      this._prodQuillToModel();
+      this.prodTab = tab;
+      setTimeout(() => this._initProdQuill(), 200);
+    },
+    // 亮点「转为列表」：粘贴文字后点一下，每行变 ◆ 项目符号
+    convertLifekitToBullets(tab) {
+      const quill = this._prodQuills && this._prodQuills[tab] ? this._prodQuills[tab].lifekit : null;
+      if (!quill) { this.toast('⚠️ 编辑器未就绪，请刷新重试', 'warning'); return; }
+      try {
+        const text = (quill.root && quill.root.innerText) || '';
+        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+        if (!lines.length) { this.toast('⚠️ 没有可转换的文字', 'warning'); return; }
+        const listHTML = '<ul><li>' + lines.join('</li><li>') + '</li></ul>';
+        // 写 model → 重建编辑器（全新 Quill 实例不触发选区 bug）
+        const lifekitField = tab === 'zh' ? 'lifekit' : 'lifekitEn';
+        this.editingProduct[lifekitField] = listHTML;
+        this._skipQuillToModel = true;
+        setTimeout(() => {
+          this._initProdQuill();
+          this._skipQuillToModel = false;
+        }, 50);
+        this.toast('✅ 已转为 ' + lines.length + ' 条列表', 'success');
+      } catch (e) {
+        this.toast('❌ 转换失败: ' + e.message, 'danger');
+        console.error('convertLifekitToBullets:', e);
+      }
+    },
+    _prodQuillToModel() {
+      if (this._skipQuillToModel) return;
+      const quills = this._prodQuills;
+      if (!quills) return;
+      const zh = quills.zh;
+      const en = quills.en;
+      // lifekit: 从 Quill 读取，yiwaibao: textarea v-model 已自动同步
+      if (zh.lifekit) this.editingProduct.lifekit = zh.lifekit.root.innerHTML;
+      if (en.lifekit) this.editingProduct.lifekitEn = en.lifekit.root.innerHTML;
+    },
+    async _initProdQuill() {
+      console.log('[Quill] _initProdQuill called, prodSrcMode:', this.prodSrcMode);
+      try {
+        this._destroyProdQuill();
+      } catch (e) {
+        console.error('[Quill] _destroyProdQuill error:', e);
+      }
+      if (this.prodSrcMode) return;
+      try {
+        await this._ensureQuill();
+      } catch (e) {
+        this.toast(e.message, 'danger');
+        this.prodSrcMode = true; // Fall back to source mode
+        return;
+      }
+      const tab = this.prodTab;
+      const lifekitRef = tab === 'zh' ? 'prodLifekitZh' : 'prodLifekitEn';
+      const lifekitField = tab === 'zh' ? 'lifekit' : 'lifekitEn';
+      const lifekitEl = this.$refs[lifekitRef];
+      console.log('[Quill] tab:', tab, 'lifekitEl:', !!lifekitEl);
+      if (!this._prodQuills) this._prodQuills = { zh: {}, en: {} };
+      if (lifekitEl) {
+        console.log('[Quill] creating lifekit Quill...');
+        const q = this._makeQuill(lifekitEl, '产品亮点...');
+        const html = this.editingProduct[lifekitField] || '';
+        console.log('[Quill] lifekit html to load:', html.substring(0, 80));
+        if (html.trim()) { q.clipboard.dangerouslyPasteHTML(html); console.log('[Quill] lifekit loaded'); }
+        else console.log('[Quill] lifekit empty, skipping');
+        this._prodQuills[tab].lifekit = q;
+      }
+    },
+    _destroyProdQuill() {
+      this._prodQuillToModel();
+      // 清理 lifekit 的旧 Quill DOM（工具栏 + 容器），防止重复叠加
+      // yiwaibao 现在是纯 textarea，不需要清理
+      ['prodLifekitZh', 'prodLifekitEn'].forEach(ref => {
+        const el = this.$refs[ref];
+        if (el) {
+          while (el.previousElementSibling && el.previousElementSibling.classList.contains('ql-toolbar')) {
+            el.previousElementSibling.remove();
+          }
+          el.classList.remove('ql-container', 'ql-snow', 'ql-disabled');
+          el.innerHTML = '';
+        }
+      });
+      if (this._prodQuills) {
+        for (const tab of ['zh', 'en']) {
+          if (this._prodQuills[tab].lifekit) this._prodQuills[tab].lifekit = null;
+        }
+      }
+    },
+    async saveProduct() {
+      this._prodQuillToModel();
+      const p = this.editingProduct;
+      const products = JSON.parse(JSON.stringify(this.productData.products));
+      const idx = products.findIndex(x => x.oid === p.oid);
+      if (idx >= 0) {
+        products[idx] = JSON.parse(JSON.stringify(p));
+      } else {
+        products.push(JSON.parse(JSON.stringify(p)));
+      }
+      if (!p.slug) {
+        p.slug = p.name.toLowerCase().replace(/[\/\s]+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      }
+      await this._writeProducts(products, `${idx >= 0 ? '编辑' : '新增'}产品 ${p.name}`);
+      this.productData.products = products;
+      this._destroyProdQuill();
+      this._hideModal('productModal');
+      this.toast(`产品 "${p.name}" 已保存`, 'success');
+    },
+    async deleteProduct(p) {
+      if (!confirm(`确定删除产品 "${p.name}"？此操作不可恢复。`)) return;
+      const products = this.productData.products.filter(x => x.oid !== p.oid);
+      await this._writeProducts(products, `删除产品 ${p.name}`);
+      this.productData.products = products;
+      this.toast(`产品 "${p.name}" 已删除`, 'warning');
+    },
+    async _writeProducts(products, msg) {
+      const data = { ...this.productData, products };
+      await this._saveJSON('src/_data/products.json', data, msg);
+    },
+
+    // ==================== NEWS ====================
+    addNews() {
+      const maxOid = this.newsData.articles.reduce((max, a) => Math.max(max, a.oid || 0), 0);
+      this.editingNews = this._emptyNews();
+      this.editingNews.oid = maxOid + 1;
+      this.newsTab = 'zh';
+      this.newsSrcMode = false;
+      this._showModal('newsModal');
+      setTimeout(() => this._initQuill(), 200);
+    },
+    editNews(a) {
+      this.editingNews = JSON.parse(JSON.stringify(a));
+      this.newsTab = 'zh';
+      this.newsSrcMode = false;
+      this._showModal('newsModal');
+      setTimeout(() => this._initQuill(), 200);
+    },
+    toggleNewsSrc() {
+      if (this.newsSrcMode) {
+        this.newsSrcMode = false;
+        setTimeout(() => this._initQuill(), 200);
+      } else {
+        this._quillToModel();
+        this._destroyQuill();
+        this.newsSrcMode = true;
+      }
+    },
+    switchNewsTab(tab) {
+      this._quillToModel();
+      this.newsTab = tab;
+      setTimeout(() => this._initQuill(), 200);
+    },
+    // ==================== SHARED QUILL FACTORY ====================
+    async _ensureQuill() {
+      if (window.Quill) return;
+      // CSS 已在 <head> 中预加载，这里只需加载 JS
+      // Load JS
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'vendor/quill.min.js';
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Quill 编辑器加载失败，请刷新页面重试'));
+        document.head.appendChild(s);
+      });
+    },
+    _makeQuill(container, placeholder) {
+      const self = this;
+      const q = new Quill(container, {
+        theme: 'snow',
+        placeholder: placeholder || '在此编辑...',
+        modules: {
+          toolbar: {
+            container: [
+              [{ header: [1, 2, 3, false] }],
+              ['bold', 'italic', 'underline'],
+              [{ color: [] }, { background: [] }],
+              [{ align: [] }],
+              [{ list: 'ordered' }, { list: 'bullet' }],
+              ['link', 'image'],
+              ['clean']
+            ],
+            handlers: {
+              image: function() { self._quillImageHandler(this, q); }
+            }
+          }
+        }
+      });
+      return q;
+    },
+    _quillImageHandler(range, quill) {
+      // Create a file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        // Show uploading indicator
+        const cursorPos = range ? range.index : quill.getLength();
+        quill.insertText(cursorPos, '⏳ 上传中...', 'italic', true);
+        try {
+          const url = await this._uploadImage(file);
+          // Replace the placeholder with the actual image
+          quill.deleteText(cursorPos, 6); // Remove "⏳ 上传中..."
+          quill.insertEmbed(cursorPos, 'image', url);
+          quill.setSelection(cursorPos + 1);
+        } catch (e) {
+          quill.deleteText(cursorPos, 6);
+          quill.insertText(cursorPos, '❌ 上传失败: ' + e.message, 'italic', true);
+          this.toast('图片上传失败: ' + e.message, 'danger');
+        }
+      };
+      input.click();
+    },
+    async _uploadImage(file) {
+      // Upload to src/images/upload/ via GitHub API
+      const ts = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+      const safeName = file.name.replace(/[^a-zA-Z0-9._\-]/g, '_');
+      const path = `src/images/upload/${ts}-${safeName}`;
+
+      // Read file as base64
+      const buf = await file.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let binary = '';
+      bytes.forEach(b => binary += String.fromCharCode(b));
+      const b64 = btoa(binary);
+
+      // Commit to GitHub
+      await this._githubAPI(path, 'PUT', {
+        message: `Upload image ${safeName} via admin`,
+        content: b64,
+        branch: 'master'
+      });
+
+      // Return public URL
+      return `/images/upload/${ts}-${safeName}`;
+    },
+
+    _quillToModel() {
+      if (this._quillZh && this.newsTab === 'zh') this.editingNews.body = this._quillZh.root.innerHTML;
+      if (this._quillEn && this.newsTab === 'en') this.editingNews.bodyEn = this._quillEn.root.innerHTML;
+    },
+    async _initQuill() {
+      this._destroyQuill();
+      const tab = this.newsTab;
+      const refKey = tab === 'zh' ? 'editorZh' : 'editorEn';
+      const fieldKey = tab === 'zh' ? 'body' : 'bodyEn';
+      const container = this.$refs[refKey];
+      if (!container || this.newsSrcMode) return;
+      try {
+        await this._ensureQuill();
+        const q = this._makeQuill(container, tab === 'zh' ? '在此编辑新闻正文...' : 'Edit news content here...');
+        const html = this.editingNews[fieldKey] || '';
+        if (html.trim()) q.root.innerHTML = html;
+        if (tab === 'zh') this._quillZh = q;
+        else this._quillEn = q;
+      } catch (e) {
+        this.toast(e.message, 'danger');
+        this.newsSrcMode = true; // Fall back to source mode
+      }
+    },
+    _destroyQuill() {
+      // Save content first, then null the refs
+      this._quillToModel();
+      // 清理旧的 Quill DOM，防止重复叠加
+      ['editorZh', 'editorEn'].forEach(ref => {
+        const el = this.$refs[ref];
+        if (el) {
+          while (el.previousElementSibling && el.previousElementSibling.classList.contains('ql-toolbar')) {
+            el.previousElementSibling.remove();
+          }
+          el.classList.remove('ql-container', 'ql-snow', 'ql-disabled');
+          el.innerHTML = '';
+        }
+      });
+      if (this._quillZh) { this._quillZh = null; }
+      if (this._quillEn) { this._quillEn = null; }
+    },
+    async saveNews() {
+      this._quillToModel();
+      const a = this.editingNews;
+      const articles = JSON.parse(JSON.stringify(this.newsData.articles));
+      const idx = articles.findIndex(x => x.oid === a.oid);
+      if (idx >= 0) articles[idx] = JSON.parse(JSON.stringify(a));
+      else articles.push(JSON.parse(JSON.stringify(a)));
+      const data = { ...this.newsData, articles };
+      await this._saveJSON('src/_data/news.json', data, `${idx >= 0 ? '编辑' : '新增'}新闻 ${a.title}`);
+      this.newsData.articles = articles;
+      this._destroyQuill();
+      this._hideModal('newsModal');
+      this.toast(`新闻 "${a.title}" 已保存`, 'success');
+    },
+    async deleteNews(a) {
+      if (!confirm(`确定删除新闻 "${a.title}"？`)) return;
+      const articles = this.newsData.articles.filter(x => x.oid !== a.oid);
+      const data = { ...this.newsData, articles };
+      await this._saveJSON('src/_data/news.json', data, `删除新闻 ${a.title}`);
+      this.newsData.articles = articles;
+      this.toast(`新闻 "${a.title}" 已删除`, 'warning');
+    },
+
+    // ==================== CASES ====================
+    addCase() {
+      const maxOid = this.casesData.solutions.reduce((max, c) => Math.max(max, c.oid || 0), 0);
+      this.editingCase = this._emptyCase();
+      this.editingCase.oid = maxOid + 1;
+      this._showModal('caseModal');
+    },
+    editCase(c) {
+      this.editingCase = JSON.parse(JSON.stringify(c));
+      this._showModal('caseModal');
+    },
+    async saveCase() {
+      const c = this.editingCase;
+      const solutions = JSON.parse(JSON.stringify(this.casesData.solutions));
+      const idx = solutions.findIndex(x => x.oid === c.oid);
+      if (idx >= 0) solutions[idx] = JSON.parse(JSON.stringify(c));
+      else solutions.push(JSON.parse(JSON.stringify(c)));
+      const data = { solutions };
+      await this._saveJSON('src/_data/cases.json', data, `${idx >= 0 ? '编辑' : '新增'}方案 ${c.name}`);
+      this.casesData.solutions = solutions;
+      this._hideModal('caseModal');
+      this.toast(`方案 "${c.name}" 已保存`, 'success');
+    },
+    async deleteCase(c) {
+      if (!confirm(`确定删除方案 "${c.name}"？`)) return;
+      const solutions = this.casesData.solutions.filter(x => x.oid !== c.oid);
+      const data = { solutions };
+      await this._saveJSON('src/_data/cases.json', data, `删除方案 ${c.name}`);
+      this.casesData.solutions = solutions;
+      this.toast(`方案 "${c.name}" 已删除`, 'warning');
+    },
+
+    // ==================== SETTINGS ====================
+    async saveSettings() {
+      await this._saveJSON('src/_data/site-base.json', this.siteForm, '更新网站设置');
+      this.siteData = JSON.parse(JSON.stringify(this.siteForm));
+      this.toast('网站设置已保存', 'success');
+    },
+
+    // ==================== UI HELPERS ====================
+    toast(msg, type = 'info') {
+      this.toasts.push({ msg, type });
+      setTimeout(() => { if (this.toasts.length) this.toasts.shift(); }, 3000);
+    },
+    _showModal(id) {
+      const el = document.getElementById(id);
+      const modal = bootstrap.Modal.getOrCreateInstance(el);
+      modal.show();
+    },
+    _hideModal(id) {
+      const modal = bootstrap.Modal.getInstance(document.getElementById(id));
+      if (modal) modal.hide();
+    },
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://www.easy-base.com.cn/sitemap.xml

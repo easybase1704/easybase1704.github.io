@@ -6,8 +6,15 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="EasyBase Technology is a manufacturer of industrial computers, cloud terminals, and edge computing devices, offering a full range of X86 and domestic platform solutions.">
+  <meta name="description" content="EasyBase Technology is a professional manufacturer of industrial computers, cloud terminals, and edge computing devices in Shenzhen, China">
   <meta name="keywords" content="Industrial Computer, Cloud Terminal, Edge Computing, Desktop Computer, All-in-One, Server, Industrial Control, Mini PC, EasyBase Technology">
+  <!-- Open Graph -->
+  <meta property="og:title" content="About Us - 原基科技 - 工控机 · 云终端 · 边缘计算设备制造商">
+  <meta property="og:description" content="EasyBase Technology is a professional manufacturer of industrial computers, cloud terminals, and edge computing devices in Shenzhen, China">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.easy-base.com.cn/en/about/">
+  <meta property="og:image" content="https://www.easy-base.com.cn/images/banner-home-1.webp">
+  <meta name="twitter:card" content="summary_large_image">
   <title>About Us - 原基科技 - 工控机 · 云终端 · 边缘计算设备制造商</title>
   <link rel="stylesheet" href="/css/global-v4.css?v=20260618">
   <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
@@ -16,6 +23,7 @@
   <div class="lang-bar">
   <div class="container lang-bar__inner">
     
+    <span class="lang-bar__phone">📞 总线：0755-88658839</span>
     <div class="lang-bar__switcher">
       
         
@@ -266,6 +274,7 @@
           <p style="font-size:var(--text-lg);font-weight:var(--font-semibold);margin-bottom:var(--space-md)">原基科技</p>
           <p>📍 深圳市光明区光明街道东周社区双明大道南侧云智科技园3栋C座（B2）1704</p>
           
+          <p style="padding-left:var(--space-lg)">📞 总线：<strong>0755-88658839</strong></p>
           
           <p style="padding-left:var(--space-lg)">
             Sales Dept 1：<strong>18565743789</strong> 王先生
@@ -279,13 +288,13 @@
             Sales Dept 3：<strong>13242092998</strong> 赵先生
           </p>
           
-          <p style="margin-top:var(--space-md)">📧 Business (Mr. Liu)：<a href="mailto:Cheng.zhao@easy-base.com.cn">Cheng.zhao@easy-base.com.cn</a></p>
+          <p style="margin-top:var(--space-md)">📧 Business (Mr. Zhao)：<a href="mailto:Cheng.zhao@easy-base.com.cn">Cheng.zhao@easy-base.com.cn</a></p>
           <p>📧 HR：<a href="mailto:mhm@easy-base.com.cn">mhm@easy-base.com.cn</a></p>
           <p style="margin-top:var(--space-sm);color:var(--color-text-secondary)">🕐 Mon - Fri 09:00 ~ 18:00</p>
         </div>
         <div class="contact-box__qr">
-          <img src="/images/about/qrcode.webp" alt="公众号二维码" loading="lazy">
-          <p class="text-secondary" style="font-size:var(--text-xs);margin-top:var(--space-xs)">Follow us on WeChat</p>
+          <div id="qrcode"></div>
+          <p class="text-secondary" style="font-size:var(--text-xs);margin-top:var(--space-xs)">📱 Mobile View</p>
         </div>
       </div>
     </div>
@@ -446,7 +455,22 @@
     justify-self: center;
   }
 }
+
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var qr = new QRCode(document.getElementById('qrcode'), {
+    text: 'https://www.easy-base.com.cn/about/#contact',
+    width: 180,
+    height: 180,
+    colorDark: '#1a1a1a',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+});
+</script>
 
   </main>
 
@@ -519,6 +543,7 @@
         <h4 class="footer__heading">原基科技</h4>
         <div class="footer__contact">
           
+          <p>📞 总线：0755-88658839</p>
           <p>📧 Cheng.zhao@easy-base.com.cn</p>
           <p>🕐 Mon - Fri 09:00 ~ 18:00</p>
           <p>📍 深圳市光明区光明街道东周社区双明大道南侧云智科技园3栋C座（B2）1704</p>
